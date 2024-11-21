@@ -256,50 +256,55 @@ def menu():
 
         choice = input("Выберите действие (или введите 'назад' для возврата в меню): ")
 
-        if choice == "1":
-            title = input("Введите название книги: ")
-            author = input("Введите автора книги: ")
-            year = int(input("Введите год издания: "))
-            message = library.add_book(title, author, year)
-            print(message)
-            input("Нажмите Enter, чтобы вернуться в меню...")
+        match choice:
+            case "1":
+                title = input("Введите название книги: ")
+                author = input("Введите автора книги: ")
+                year = int(input("Введите год издания: "))
+                message = library.add_book(title, author, year)
+                print(message)
+                input("Нажмите Enter, чтобы вернуться в меню...")
 
-        elif choice == "2":
-            book_id = int(input("Введите ID книги для удаления: "))
-            message = library.remove_book(book_id)
-            print(message)
-            input("Нажмите Enter, чтобы вернуться в меню...")
+            case "2":
+                book_id = int(input("Введите ID книги для удаления: "))
+                message = library.remove_book(book_id)
+                print(message)
+                input("Нажмите Enter, чтобы вернуться в меню...")
 
-        elif choice == "3":
-            search_term = input("Введите название, автора или год для поиска: ")
-            results = library.search_books(search_term)
-            if results:
-                for book in results:
-                    print(book)
-            else:
-                print("Книги не найдены.")
-            input("Нажмите Enter, чтобы вернуться в меню...")
+            case "3":
+                search_term = input("Введите название, автора или год для поиска: ")
+                results = library.search_books(search_term)
+                if results:
+                    for book in results:
+                        print(book)
+                else:
+                    print("Книги не найдены.")
+                input("Нажмите Enter, чтобы вернуться в меню...")
 
-        elif choice == "4":
-            books = library.display_books()
-            print(books)
-            input("Нажмите Enter, чтобы вернуться в меню...")
+            case "4":
+                books = library.display_books()
+                print(books)
+                input("Нажмите Enter, чтобы вернуться в меню...")
 
-        elif choice == "5":  # Взять книгу
-            book_id = int(input("Введите ID книги, которую хотите взять: "))
-            message = library.change_status(book_id, "выдана")
-            print(message)
-            input("Нажмите Enter, чтобы вернуться в меню...")
+            case "5":  # Взять книгу
+                book_id = int(input("Введите ID книги, которую хотите взять: "))
+                message = library.change_status(book_id, "выдана")
+                print(message)
+                input("Нажмите Enter, чтобы вернуться в меню...")
 
-        elif choice == "6":  # Вернуть книгу
-            book_id = int(input("Введите ID книги, которую хотите вернуть: "))
-            message = library.change_status(book_id, "в наличии")
-            print(message)
-            input("Нажмите Enter, чтобы вернуться в меню...")
+            case "6":  # Вернуть книгу
+                book_id = int(input("Введите ID книги, которую хотите вернуть: "))
+                message = library.change_status(book_id, "в наличии")
+                print(message)
+                input("Нажмите Enter, чтобы вернуться в меню...")
 
-        elif choice == "7":
-            print("Выход из программы.")
-            break
+            case "7":
+                print("Выход из программы.")
+                break
+
+            case _:
+                print("Некорректный выбор. Попробуйте еще раз.")
+                input("Нажмите Enter, чтобы вернуться в меню...")
 
 
 if __name__ == "__main__":
