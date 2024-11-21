@@ -1,5 +1,6 @@
 import json
 import os
+from typing import List, Optional
 
 
 class Book:
@@ -14,7 +15,7 @@ class Book:
     id (int): Уникальный идентификатор книги.
     """
 
-    def __init__(self, title: str, author: str, year: int, status: str = "в наличии", id: int = None):
+    def __init__(self, title: str, author: str, year: int, status: str = "в наличии", id: Optional[int] = None):
         """
         Инициализация объекта книги.
 
@@ -30,7 +31,7 @@ class Book:
         self.status = status
         self.id = id  # Добавлено для поддержки аргумента id
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Возвращает строковое представление книги для удобного вывода.
 
@@ -46,8 +47,9 @@ class Library:
 
     Атрибуты:
     filename (str): Имя файла для сохранения и загрузки данных библиотеки (по умолчанию 'library_data.json').
-    Books (list): Список объектов книг в библиотеке.
+    books (List[Book]): Список объектов книг в библиотеке.
     """
+
     def __init__(self, filename: str = "library_data.json"):
         """
         Инициализация объекта библиотеки.
@@ -58,12 +60,12 @@ class Library:
         self.filename = filename
         self.books = self.load_books()  # Загружаем книги из файла
 
-    def load_books(self) -> list:
+    def load_books(self) -> List[Book]:
         """
         Загружает книги из файла в список.
 
         Возвращает:
-        list: Список объектов книг, загруженных из файла.
+        List[Book]: Список объектов книг, загруженных из файла.
         Если файл не существует, возвращает пустой список.
         """
         if not os.path.exists(self.filename) or os.path.getsize(self.filename) == 0:
@@ -82,10 +84,9 @@ class Library:
         Сохраняет книги в формате JSON, где каждый объект книги представляется как словарь.
         """
         with open(self.filename, 'w', encoding='utf-8') as file:
-            # Преобразуем объекты книг в словари и сохраняем в JSON формате
             json.dump([book.__dict__ for book in self.books], file, ensure_ascii=False, indent=4)
 
-    def add_book(self, title: str, author: str, year: int):
+    def add_book(self, title: str, author: str, year: int) -> str:
         """
         Добавляет новую книгу в библиотеку.
 
@@ -93,11 +94,15 @@ class Library:
         title (str): Название книги.
         author (str): Автор книги.
         year (int): Год издания книги.
+
+        Возвращает:
+        str: Сообщение об успешности добавления книги.
         """
         new_book = Book(title, author, year)  # Создаем объект книги
         new_book.id = self.generate_book_id()  # Генерируем уникальный ID для книги
         self.books.append(new_book)  # Добавляем книгу в список
         self.save_books()  # Сохраняем изменения в файл
+        return f"Книга '{new_book.title}' успешно добавлена в библиотеку."
 
     def generate_book_id(self) -> int:
         """
@@ -106,26 +111,27 @@ class Library:
         Возвращает:
         int: Новый уникальный ID книги.
         """
-        # Если библиотека пуста, начинаем с ID 1
         return max([book.id for book in self.books], default=0) + 1
 
-    def remove_book(self, book_id: int):
+    def remove_book(self, book_id: int) -> str:
         """
         Удаляет книгу из библиотеки по ID.
 
         Параметры:
         book_id (int): ID книги, которую нужно удалить.
 
-        Если книга с таким ID не найдена, выводится сообщение об ошибке.
+        Возвращает:
+        str: Сообщение об успешности или неуспешности удаления.
         """
         book_to_remove = next((book for book in self.books if book.id == book_id), None)
         if book_to_remove:
             self.books.remove(book_to_remove)  # Удаляем книгу из списка
             self.save_books()  # Сохраняем изменения
+            return f"Книга с ID {book_id} успешно удалена."
         else:
-            print(f"Книга с ID {book_id} не найдена.")  # Сообщение, если книга не найдена
+            return f"Книга с ID {book_id} не найдена."
 
-    def search_books(self, search_term: str):
+    def search_books(self, search_term: str) -> List[Book]:
         """
         Ищет книги по заданному поисковому запросу.
 
@@ -133,13 +139,17 @@ class Library:
         search_term (str): Строка поиска (может быть частью названия, автора или года издания).
 
         Возвращает:
-        list: Список книг, которые соответствуют поисковому запросу.
+        List[Book]: Список книг, которые соответствуют поисковому запросу.
         """
-        return [book for book in self.books if search_term.lower() in book.title.lower() or
+        results = [book for book in self.books if search_term.lower() in book.title.lower() or
                                                     search_term.lower() in book.author.lower() or
                                                     search_term in str(book.year)]
+        if results:
+            return results
+        else:
+            return []  # Возвращаем пустой список, если ничего не найдено
 
-    def change_status(self, book_id: int, new_status: str):
+    def change_status(self, book_id: int, new_status: str) -> str:
         """
         Изменяет статус книги по ID.
 
@@ -147,30 +157,88 @@ class Library:
         book_id (int): ID книги, для которой нужно изменить статус.
         new_status (str): Новый статус книги ("в наличии" или "выдана").
 
-        Если статус неверный или книга не найдена, выводится сообщение об ошибке.
+        Возвращает:
+        str: Сообщение об успешности изменения статуса.
         """
         if new_status not in ["в наличии", "выдана"]:
-            print("Неверный статус. Статус должен быть 'в наличии' или 'выдана'.")
-            return
+            return "Неверный статус. Статус должен быть 'в наличии' или 'выдана'."
+
         book_to_update = next((book for book in self.books if book.id == book_id), None)
         if book_to_update:
+            # Проверка, если книга уже в нужном статусе
+            if new_status == "выдана" and book_to_update.status == "выдана":
+                return f"Книга с ID {book_id} уже выдана."
+            if new_status == "в наличии" and book_to_update.status == "в наличии":
+                return f"Книга с ID {book_id} уже в наличии."
+
             book_to_update.status = new_status  # Обновляем статус книги
             self.save_books()  # Сохраняем изменения
+            return f"Статус книги с ID {book_id} изменен на '{new_status}'."
         else:
-            print(f"Книга с ID {book_id} не найдена.")  # Сообщение, если книга не найдена
+            return f"Книга с ID {book_id} не найдена."
+
+    def borrow_book(self, book_id: int) -> str:
+        """
+        Проверка и изменение статуса книги на "выдана".
+
+        Параметры:
+        book_id (int): ID книги, которую нужно взять.
+
+        Возвращает:
+        str: Сообщение об успешности операции.
+        """
+        book_to_borrow = self.get_book_by_id(book_id)
+        if book_to_borrow:
+            if book_to_borrow.status == "выдана":
+                return f"Книга с ID {book_id} уже выдана."
+            else:
+                return self.change_status(book_id, "выдана")
+        else:
+            return f"Книга с ID {book_id} не найдена."
+
+    def return_book(self, book_id: int) -> str:
+        """
+        Проверка и изменение статуса книги на "в наличии".
+
+        Параметры:
+        book_id (int): ID книги, которую нужно вернуть.
+
+        Возвращает:
+        str: Сообщение об успешности операции.
+        """
+        book_to_return = self.get_book_by_id(book_id)
+        if book_to_return:
+            if book_to_return.status == "в наличии":
+                return f"Книга с ID {book_id} уже в наличии."
+            else:
+                return self.change_status(book_id, "в наличии")
+        else:
+            return f"Книга с ID {book_id} не найдена."
 
     def display_books(self):
         """
         Отображает все книги в библиотеке.
 
         Если библиотека пуста, выводится сообщение о том, что книг нет.
+
+        Возвращает:
+        str: Сообщение о наличии книг в библиотеке.
         """
         if not self.books:
-            print("Нет доступных книг.")
-        for book in self.books:
-            print(book)  # Выводим информацию о каждой книге
+            return "Нет доступных книг."
+        else:
+            return "\n".join(str(book) for book in self.books)
 
-    def get_book_by_id(self, book_id: int):
+    def get_book_by_id(self, book_id: int) -> Optional[Book]:
+        """
+        Получает книгу по ID.
+
+        Параметры:
+        book_id (int): ID книги.
+
+        Возвращает:
+        Book или None: Книга с данным ID или None, если книга не найдена.
+        """
         return next((book for book in self.books if book.id == book_id), None)
 
 
@@ -192,13 +260,15 @@ def menu():
             title = input("Введите название книги: ")
             author = input("Введите автора книги: ")
             year = int(input("Введите год издания: "))
-            library.add_book(title, author, year)
-            input("Книга добавлена. Нажмите Enter, чтобы вернуться в меню...")
+            message = library.add_book(title, author, year)
+            print(message)
+            input("Нажмите Enter, чтобы вернуться в меню...")
 
         elif choice == "2":
             book_id = int(input("Введите ID книги для удаления: "))
-            library.remove_book(book_id)
-            input("Книга удалена (если такая была). Нажмите Enter, чтобы вернуться в меню...")
+            message = library.remove_book(book_id)
+            print(message)
+            input("Нажмите Enter, чтобы вернуться в меню...")
 
         elif choice == "3":
             search_term = input("Введите название, автора или год для поиска: ")
@@ -211,42 +281,25 @@ def menu():
             input("Нажмите Enter, чтобы вернуться в меню...")
 
         elif choice == "4":
-            library.display_books()
+            books = library.display_books()
+            print(books)
             input("Нажмите Enter, чтобы вернуться в меню...")
 
         elif choice == "5":  # Взять книгу
             book_id = int(input("Введите ID книги, которую хотите взять: "))
-            book = library.get_book_by_id(book_id)
-            if book:
-                if book.status == "в наличии":
-                    library.change_status(book_id, "выдана")
-                    input(f"Книга '{book.title}' выдана. Нажмите Enter, чтобы вернуться в меню...")
-                else:
-                    input("Эта книга уже выдана. Нажмите Enter, чтобы вернуться в меню...")
-            else:
-                input("Книга с таким ID не найдена. Нажмите Enter, чтобы вернуться в меню...")
+            message = library.change_status(book_id, "выдана")
+            print(message)
+            input("Нажмите Enter, чтобы вернуться в меню...")
 
         elif choice == "6":  # Вернуть книгу
             book_id = int(input("Введите ID книги, которую хотите вернуть: "))
-            book = library.get_book_by_id(book_id)
-            if book:
-                if book.status == "выдана":
-                    library.change_status(book_id, "в наличии")
-                    input(f"Книга '{book.title}' возвращена. Нажмите Enter, чтобы вернуться в меню...")
-                else:
-                    input("Эта книга уже находится в библиотеке. Нажмите Enter, чтобы вернуться в меню...")
-            else:
-                input("Книга с таким ID не найдена. Нажмите Enter, чтобы вернуться в меню...")
+            message = library.change_status(book_id, "в наличии")
+            print(message)
+            input("Нажмите Enter, чтобы вернуться в меню...")
 
         elif choice == "7":
             print("Выход из программы.")
             break
-
-        elif choice.lower() == 'назад':
-            continue
-
-        else:
-            print("Неверный выбор, попробуйте снова.")
 
 
 if __name__ == "__main__":
