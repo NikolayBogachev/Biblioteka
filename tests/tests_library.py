@@ -1,14 +1,23 @@
 import pytest
+from library import LibraryLogic, Book, BookStatus, LibraryDataAccess
 
-from library import Library, Book
 
-
-# Тест для класса Library
 @pytest.fixture
-def sample_library():
-    """Создает экземпляр библиотеки для тестов."""
-    library = Library("test_library.json")
-    library.books = []
+def sample_file(tmpdir):
+    """Создает временный файл с данными для теста."""
+    # Создаем временный файл
+    test_file = tmpdir.join("test_library.json")
+
+    # Передаем путь к файлу для использования в тесте
+    yield test_file
+
+
+# Тест для класса LibraryLogic
+@pytest.fixture
+def sample_library(sample_file):
+    """Создает экземпляр библиотеки для тестов с временным файлом."""
+    data_access = LibraryDataAccess(str(sample_file))  # Передаем путь к временному файлу
+    library = LibraryLogic(data_access)
     return library
 
 
@@ -30,13 +39,13 @@ def test_add_book(sample_library):
 
 # Тестирование удаления книги
 def test_remove_book(sample_library, sample_book):
-
     sample_library.add_book(sample_book.title, sample_book.author, sample_book.year)
-    book_id = sample_library.books[0].id
+    assert len(sample_library.books) == 1  # Убедитесь, что книга добавлена
+    book_id = sample_library.books[0].book_id
 
     message = sample_library.remove_book(book_id)
     assert "успешно удалена" in message
-    assert len(sample_library.books) == 0
+    assert len(sample_library.books) == 0  # Убедитесь, что книга удалена
 
 
 # Тестирование поиска книги
@@ -55,21 +64,21 @@ def test_search_books(sample_library, sample_book):
 # Тестирование изменения статуса книги
 def test_change_status(sample_library, sample_book):
     sample_library.add_book(sample_book.title, sample_book.author, sample_book.year)
-    book_id = sample_library.books[0].id
+    book_id = sample_library.books[0].book_id
 
-    message = sample_library.change_status(book_id, "выдана")
+    # Проверка успешного изменения статуса
+    message = sample_library.change_status(book_id, BookStatus.BORROWED)
     assert "изменен на 'выдана'" in message
-    assert sample_library.books[0].status == "выдана"
+    assert sample_library.books[0].status == BookStatus.BORROWED
 
-    message = sample_library.change_status(book_id, "выдана")
-    assert "уже выдана" in message
+    # Проверка попытки установить тот же статус
+    message = sample_library.change_status(book_id, BookStatus.BORROWED)
+    assert "уже имеет статус 'выдана'" in message
 
-    message = sample_library.change_status(book_id, "в наличии")
+    # Проверка возврата книги
+    message = sample_library.change_status(book_id, BookStatus.AVAILABLE)
     assert "изменен на 'в наличии'" in message
-    assert sample_library.books[0].status == "в наличии"
-
-    message = sample_library.change_status(book_id, "неизвестный статус")
-    assert "Неверный статус" in message
+    assert sample_library.books[0].status == BookStatus.AVAILABLE
 
 
 # Тестирование ошибки при удалении несуществующей книги
@@ -80,6 +89,5 @@ def test_remove_nonexistent_book(sample_library):
 
 # Тестирование ошибки при изменении статуса несуществующей книги
 def test_change_status_nonexistent_book(sample_library):
-    message = sample_library.change_status(999, "выдана")
+    message = sample_library.change_status(999, BookStatus.BORROWED)
     assert "не найдена" in message
-

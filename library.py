@@ -36,7 +36,7 @@ class Book:
         self.author = author
         self.year = year
         self.status = status
-        self.book_id = book_id  # Уникальный идентификатор книги
+        self.book_id = book_id
 
     def __str__(self) -> str:
         """
@@ -218,8 +218,8 @@ class LibraryLogic:
         if book_to_update:
             if book_to_update.status == new_status:
                 return f"Книга с ID {book_id} уже имеет статус '{new_status.value}'."
-            book_to_update.status = new_status  # Обновление статуса книги
-            self.data_access.save_books(self.books)  # Сохранение изменений
+            book_to_update.status = new_status
+            self.data_access.save_books(self.books)
             return f"Статус книги с ID {book_id} изменен на '{new_status.value}'."
         else:
             return f"Книга с ID {book_id} не найдена."
