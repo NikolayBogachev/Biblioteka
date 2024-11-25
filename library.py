@@ -96,9 +96,9 @@ class LibraryDataAccess:
             with open(self.filename, 'r', encoding='utf-8') as file:
                 data = json.load(file)
                 books = []
-                for book in data:
-                    book["status"] = BookStatus(book["status"])
-                    books.append(Book(**book))
+                for book_data in data:
+                    book_data["status"] = BookStatus(book_data["status"])
+                    books.append(Book(**book_data))
                 return books
         except (json.JSONDecodeError, KeyError):
             print("Ошибка при загрузке данных из JSON файла.")
